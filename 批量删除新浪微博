@@ -1,0 +1,70 @@
+#coding:utf-8
+from selenium import webdriver
+import time
+import sys
+reload(sys)
+sys.setdefaultencoding( "utf-8" )
+from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+
+dcap = dict(DesiredCapabilities.PHANTOMJS)
+dcap["phantomjs.page.settings.userAgent"] = (
+    "Mozilla/5.0 (Macintosh; Intel Mac OS X 10.9; rv:25.0) Gecko/20100101 Firefox/25.0 "
+)
+
+driver = webdriver.Chrome(desired_capabilities=dcap)
+driver.get("http://weibo.com/")
+
+#窗口最大化
+time.sleep(5)
+driver.maximize_window()
+time.sleep(3)
+
+#模拟登陆新浪微博
+logsub=driver.find_element_by_xpath('/html/body/div[1]/div[1]/div/div[2]/div[1]/div[2]/div/div[2]/div[1]/div[2]/div[1]/div[1]/div/div[1]/div/a[1]').click()
+username=driver.find_element_by_xpath('//div[@class="info_list username"]/div/input').send_keys('用户名')
+password=driver.find_element_by_xpath('//div[@class="info_list password"]/div/input').send_keys('密码')
+sub=driver.find_element_by_xpath('//div[@class="info_list login_btn"]/a/span').click()
+
+#点击我的微博
+weinote=driver.find_element_by_xpath('/html/body/div[1]/div/div[2]/div[3]/div[2]/div[2]/div[2]/div/div/div[2]/ul/li[3]/a/strong').click()
+
+#任意设置一个值
+global page 
+page = 100
+
+#-------核心删除代码----------
+def delweibo():
+	time.sleep(3)
+  #定位删除元素
+	weicon=driver.find_elements_by_xpath('//div[@id="Pl_Official_MyProfileFeed__21"]/div/div[@class="WB_cardwrap WB_feed_type S_bg2 "]')
+	count=0
+  
+  #确定当前页面微博数量
+	manweibo=len(weicon)
+	if(manweibo==0):
+		global page
+		page=0  #当前页面没有微博时，返回page=0
+		return page;
+	print '该页微博数为: %d 条' % manweibo
+	
+  #删除微博
+  for subweicon in weicon:
+		count=count+1
+		sub1=subweicon.find_element_by_xpath('div/div/div/a').click()
+		time.sleep(1)
+		del1=subweicon.find_element_by_xpath('div/div/div/div[1]/ul/li[1]/a').click()
+		yes1=subweicon.find_element_by_xpath('div/div/div/div[2]/div/p[2]/a[1]').click()
+		print '已经删除一条微博'
+		time.sleep(2)
+    
+    #判断当前页面微博是否删除完全
+		if(count==manweibo):
+			print 'next page'
+			return delweibo() #递归自身，删除下一页微博
+delweibo()
+if(page==0):
+	print '微博内容已经清空'
+
+time.sleep(2)
+
+driver.close()
